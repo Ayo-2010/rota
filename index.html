@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rota — Fourteen-Day Workforce Planner</title>
+<meta name="description" content="Build a fair fourteen-day staff rota with shift coverage, availability, conflict checks, drag-and-drop assignments, and CSV export.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark"><i></i><i></i><i></i><i></i></span>
+      <div>
+        <strong>Rota</strong>
+        <small>Workforce planner</small>
+      </div>
+    </div>
+    <div class="top-actions">
+      <label class="cycle-input">Cycle start
+        <input type="date" id="start-date">
+      </label>
+      <button id="autofill" class="primary" type="button">Auto-fill</button>
+      <button id="export-csv" class="outline" type="button">Export CSV</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Fourteen days · three shifts · one fair board</p>
+      <h1>People, <em>placed</em><br>with purpose.</h1>
+      <p>Build a fortnight that respects days off, shares the weekends, and shows every gap before it becomes a problem.</p>
+    </div>
+    <div class="hero-score">
+      <span>Coverage</span>
+      <strong id="hero-coverage">100%</strong>
+      <small id="cycle-label">—</small>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <aside class="rail left-rail">
+      <section class="card team-card">
+        <div class="card-head"><span>Team</span><span id="team-count">0 people</span></div>
+        <div class="team-list" id="team-list"></div>
+        <button class="add-member" id="add-member" type="button">+ Add team member</button>
+      </section>
+
+      <section class="card rules-card">
+        <div class="card-head"><span>Board rules</span><span>02</span></div>
+        <label class="toggle"><input type="checkbox" id="avoid-night"> Night → morning guard</label>
+        <label class="toggle"><input type="checkbox" id="balance-weekends"> Balance weekends</label>
+        <div class="rules-actions">
+          <button id="clear-schedule" type="button">Clear board</button>
+          <button id="undo" type="button" disabled>Undo</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="board-card">
+      <div class="board-head">
+        <div>
+          <p class="eyebrow">Fortnight board</p>
+          <h2 id="board-title">19 October — 1 November</h2>
+        </div>
+        <span class="open-badge" id="open-badge">0 open shifts</span>
+      </div>
+      <div class="board-scroll">
+        <div class="board" id="board"></div>
+      </div>
+      <div class="board-foot">
+        <span>Drag a teammate onto a shift, or select a cell to assign.</span>
+        <div class="shift-legend">
+          <span><i class="morning"></i>Morning</span>
+          <span><i class="evening"></i>Evening</span>
+          <span><i class="night"></i>Night</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rail right-rail">
+      <section class="card coverage-card">
+        <div class="card-head"><span>Pulse</span><span>Live</span></div>
+        <div class="coverage-top">
+          <div class="coverage-ring" id="coverage-ring"><span id="coverage-number">100%</span></div>
+          <div class="coverage-copy">
+            <strong id="filled-slots">42 of 42</strong>
+            <span>shifts filled</span>
+            <span id="open-shifts">0 still open</span>
+          </div>
+        </div>
+        <div class="coverage-stats">
+          <div><span>Hours</span><strong id="total-hours">336</strong></div>
+          <div><span>Fairness</span><strong id="fairness-range">6–6</strong></div>
+          <div><span>Weekend</span><strong id="weekend-count">12</strong></div>
+        </div>
+      </section>
+
+      <section class="card assignment-card">
+        <div class="card-head"><span>Assignment</span><span id="assignment-state">None</span></div>
+        <div id="assignment-body"></div>
+      </section>
+
+      <section class="card balance-card">
+        <div class="card-head"><span>Balance</span><span>Shifts</span></div>
+        <div class="balance-list" id="balance-list"></div>
+      </section>
+
+      <section class="card issues-card">
+        <div class="card-head"><span>Rules check</span><span id="issue-count">Clear</span></div>
+        <div class="issues-list" id="issues-list"></div>
+      </section>
+    </aside>
+  </main>
+
+  <footer>
+    <span>Rota / a local-first fortnight planner</span>
+    <span id="footer-note">All changes save automatically.</span>
+  </footer>
+</div>
+
+<dialog class="member-dialog" id="member-dialog">
+  <form id="member-form">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">Team member</p>
+        <h2 id="dialog-title">Add someone</h2>
+      </div>
+      <button class="dialog-close" id="close-dialog" type="button" aria-label="Close">×</button>
+    </div>
+    <input type="hidden" id="member-id">
+    <label class="form-field">Name
+      <input id="member-name" type="text" maxlength="36" required placeholder="e.g. Ada Lovelace">
+    </label>
+    <div class="form-row">
+      <label class="form-field">Role
+        <select id="member-role">
+          <option>Bar</option>
+          <option>Floor</option>
+          <option>Kitchen</option>
+          <option>Manager</option>
+          <option>Host</option>
+        </select>
+      </label>
+      <label class="form-field">Shift ceiling
+        <input id="member-max" type="number" min="1" max="14" value="8">
+      </label>
+    </div>
+    <fieldset>
+      <legend>Days off</legend>
+      <div class="days-off" id="days-off"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Colour</legend>
+      <div class="color-picker" id="color-picker"></div>
+    </fieldset>
+    <div class="dialog-actions">
+      <button id="delete-member" class="danger" type="button">Delete</button>
+      <span></span>
+      <button id="cancel-member" class="outline" type="button">Cancel</button>
+      <button class="primary" type="submit">Save member</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
